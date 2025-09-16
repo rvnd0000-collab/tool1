@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.2rem;
+        }
+        
+        .description {
+            color: #555;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+        
+        .calculator-type {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+            gap: 15px;
+        }
+        
+        .calc-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background-color: #f0f0f0;
+            color: #555;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .calc-btn.active {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            border-color: #6a11cb;
+            outline: none;
+        }
+        
+        .days-input {
+            display: none;
+        }
+        
+        .date-input {
+            display: none;
+        }
+        
+        button {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            font-weight: 600;
+            width: 100%;
+            margin-bottom: 25px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .result {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .result.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        .result h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+        
+        .result-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #6a11cb;
+            margin-bottom: 5px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .footer {
+            margin-top: 25px;
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .calculator-type {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Date Calculator</h1>
+        <p class="description">Calculate date differences or add/subtract days from a date</p>
+        
+        <div class="calculator-type">
+            <button class="calc-btn active" id="add-subtract-btn">Add/Subtract Days</button>
+            <button class="calc-btn" id="difference-btn">Date Difference</button>
+        </div>
+        
+        <div class="input-group" id="start-date-group">
+            <label for="start-date">Start Date:</label>
+            <input type="date" id="start-date">
+        </div>
+        
+        <div class="input-group days-input" id="days-group">
+            <label for="days">Days to Add/Subtract:</label>
+            <input type="number" id="days" placeholder="Enter days (use minus to subtract)">
+        </div>
+        
+        <div class="input-group date-input" id="end-date-group">
+            <label for="end-date">End Date:</label>
+            <input type="date" id="end-date">
+        </div>
+        
+        <button id="calculate-btn">Calculate</button>
+        
+        <div class="result" id="result">
+            <h3>Result</h3>
+            <div class="result-value" id="result-value"></div>
+            <div id="result-details"></div>
+        </div>
+        
+        <p class="footer">Easily calculate dates for planning, scheduling, and more!</p>
+    </div>
+
+    <script>
+        // Set max date to today for start date
+        document.getElementById('start-date').max = new Date().toISOString().split('T')[0];
+        document.getElementById('end-date').max = new Date().toISOString().split('T')[0];
+        
+        // Calculator type toggle
+        const addSubtractBtn = document.getElementById('add-subtract-btn');
+        const differenceBtn = document.getElementById('difference-btn');
+        const daysGroup = document.getElementById('days-group');
+        const endDateGroup = document.getElementById('end-date-group');
+        
+        addSubtractBtn.addEventListener('click', function() {
+            addSubtractBtn.classList.add('active');
+            differenceBtn.classList.remove('active');
+            daysGroup.style.display = 'block';
+            endDateGroup.style.display = 'none';
+        });
+        
+        differenceBtn.addEventListener('click', function() {
+            differenceBtn.classList.add('active');
+            addSubtractBtn.classList.remove('active');
+            daysGroup.style.display = 'none';
+            endDateGroup.style.display = 'block';
+        });
+        
+        // Initialize with add/subtract view
+        daysGroup.style.display = 'block';
+        
+        // Calculate function
+        document.getElementById('calculate-btn').addEventListener('click', function() {
+            const isAddSubtractMode = addSubtractBtn.classList.contains('active');
+            const startDate = new Date(document.getElementById('start-date').value);
+            
+            if (!document.getElementById('start-date').value) {
+                alert('Please select a start date');
+                return;
+            }
+            
+            if (isAddSubtractMode) {
+                const days = parseInt(document.getElementById('days').value);
+                
+                if (isNaN(days)) {
+                    alert('Please enter a valid number of days');
+                    return;
+                }
+                
+                // Calculate new date
+                const resultDate = new Date(startDate);
+                resultDate.setDate(resultDate.getDate() + days);
+                
+                // Format result
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                const formattedDate = resultDate.toLocaleDateString('en-US', options);
+                
+                // Display result
+                document.getElementById('result-value').textContent = formattedDate;
+                document.getElementById('result-details').innerHTML = 
+                    `<p>${days} days ${days >= 0 ? 'after' : 'before'} ${startDate.toLocaleDateString('en-US', options)}</p>`;
+                
+            } else {
+                const endDate = new Date(document.getElementById('end-date').value);
+                
+                if (!document.getElementById('end-date').value) {
+                    alert('Please select an end date');
+                    return;
+                }
+                
+                // Calculate difference in days
+                const timeDiff = endDate.getTime() - startDate.getTime();
+                const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
+                
+                // Display result
+                document.getElementById('result-value').textContent = Math.abs(daysDiff) + " days";
+                
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const startFormatted = startDate.toLocaleDateString('en-US', options);
+                const endFormatted = endDate.toLocaleDateString('en-US', options);
+                
+                if (daysDiff > 0) {
+                    document.getElementById('result-details').innerHTML = 
+                        `<p>From ${startFormatted} to ${endFormatted}</p>`;
+                } else if (daysDiff < 0) {
+                    document.getElementById('result-details').innerHTML = 
+                        `<p>From ${endFormatted} to ${startFormatted}</p>`;
+                } else {
+                    document.getElementById('result-details').innerHTML = 
+                        `<p>The dates are the same</p>`;
+                }
+            }
+            
+            // Show result
+            document.getElementById('result').classList.add('active');
+        });
+    </script>
+</body>
+</html>
